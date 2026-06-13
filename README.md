@@ -1,6 +1,6 @@
 # Swiss Canton Kanton-Skewers Toolkit
 
-Generate printable landscape A4 label strips for appetizer skewers using Swiss canton crests or flags.
+Generate printable landscape A4 label strips for skewers using Swiss canton crests or flags.
 
 ## Features
 
