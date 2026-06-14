@@ -2,6 +2,12 @@
 
 Generate printable landscape A4 label strips for skewers using Swiss canton crests or flags.
 
+[Sample variants PDF](docs/kanton_skewers_sample_variants.pdf)
+
+![Hero shot: multi-canton flag output](docs/screenshots/example_flags_multi.png)
+
+
+
 ## Features
 
 - Single CLI application
@@ -90,8 +96,4 @@ kanton-skewers generate-variants AG SO ZH SH AI \
 ```
 
 Note: scales that cannot fit on A4 are skipped automatically.
-
-## Screenshots
-
-![Multi-canton flag output](docs/screenshots/example_flags_multi.png)
 
