@@ -1,4 +1,4 @@
-# Swiss Canton Kanton-Skewers Toolkit
+# Swiss Kanton-Skewers Toolkit
 
 Generate printable landscape A4 label strips for skewers using Swiss canton crests or flags.
 
