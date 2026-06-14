@@ -33,6 +33,7 @@ class KantonSkewersPdfGenerator:
         tab_mm: float,
         flag_mm: float,
         height_mm: float,
+        bleed_mm: float,
         margin_mm: float,
         gap_mm: float,
         show_text: bool,
@@ -46,6 +47,8 @@ class KantonSkewersPdfGenerator:
 
         if count_per_canton < 1:
             raise ValueError("count_per_canton must be at least 1")
+        if bleed_mm <= 0:
+            raise ValueError("bleed_mm must be > 0")
         if motif_mode not in {"crest", "flag"}:
             raise ValueError("motif_mode must be either 'crest' or 'flag'")
         if flag_layout not in {"square", "full"}:
@@ -70,14 +73,16 @@ class KantonSkewersPdfGenerator:
         gap = gap_mm * mm
         flag_w = flag_mm * mm
         strip_h = height_mm * mm
+        bleed_tick = bleed_mm * mm
+        effective_gap = self._effective_strip_gap(gap=gap, tick=bleed_tick)
         effective_flag_w = strip_h if flag_layout == "square" else flag_w
         tab_w = effective_flag_w
         strip_w = tab_w + effective_flag_w
 
         usable_w = page_w - 2 * margin
         usable_h = page_h - 2 * margin
-        cols = int((usable_w + gap) // (strip_w + gap))
-        rows = int((usable_h + gap) // (strip_h + gap))
+        cols = int((usable_w + effective_gap) // (strip_w + effective_gap))
+        rows = int((usable_h + effective_gap) // (strip_h + effective_gap))
         per_page = cols * rows
 
         if per_page <= 0:
@@ -95,8 +100,8 @@ class KantonSkewersPdfGenerator:
                         break
 
                     code = items[made]
-                    x = margin + col * (strip_w + gap)
-                    y = page_h - margin - strip_h - row * (strip_h + gap)
+                    x = margin + col * (strip_w + effective_gap)
+                    y = page_h - margin - strip_h - row * (strip_h + effective_gap)
                     self._draw_strip(
                         c=c,
                         x=x,
@@ -107,6 +112,7 @@ class KantonSkewersPdfGenerator:
                         tab_w=tab_w,
                         flag_w=effective_flag_w,
                         h=strip_h,
+                        bleed_tick=bleed_tick,
                         show_text=show_text,
                         show_frame=show_frame,
                         motif_mode=motif_mode,
@@ -141,6 +147,7 @@ class KantonSkewersPdfGenerator:
         tab_w: float,
         flag_w: float,
         h: float,
+        bleed_tick: float,
         show_text: bool,
         show_frame: bool,
         motif_mode: str,
@@ -150,20 +157,16 @@ class KantonSkewersPdfGenerator:
         total_w = tab_w + flag_w
         fold_x = x + tab_w
 
-        self._draw_cut_corner_marks(c=c, x=x, y=y, w=total_w, h=h)
+        self._draw_cut_corner_marks(c=c, x=x, y=y, w=total_w, h=h, tick=bleed_tick)
 
         if show_frame:
             c.setLineWidth(0.15)
             c.setDash(1, 2)
             c.rect(x, y, total_w, h)
 
-        c.setLineWidth(0.35)
-        c.setDash(2, 2)
-        c.line(fold_x, y, fold_x, y + h)
+        self._draw_back_panel_guide(c=c, x=x, y=y, w=tab_w, h=h)
 
         c.setDash()
-        c.setFont("Helvetica", 5)
-        c.drawCentredString(x + tab_w / 2, y + h / 2 - 2, "fold")
 
         if motif_mode == "flag":
             if flag_layout == "square":
@@ -199,19 +202,88 @@ class KantonSkewersPdfGenerator:
         y: float,
         w: float,
         h: float,
-        tick: float = 3 * mm,
+        tick: float,
     ) -> None:
-        c.setLineWidth(0.25)
+        long_len = tick * 0.75
+        gap = max(0.5 * mm, tick * 0.35)
+
+        c.saveState()
+        c.setLineWidth(0.7)
+        c.setLineCap(1)
         c.setDash()
 
-        c.line(x, y, x + tick, y)
-        c.line(x, y, x, y + tick)
+        # bottom-left corner (inside directions: +x, +y)
+        self._draw_split_corner_mark(c, x, y, inside_dx=1, inside_dy=1, long_len=long_len, gap=gap)
+        # bottom-right corner (inside directions: -x, +y)
+        self._draw_split_corner_mark(
+            c,
+            x + w,
+            y,
+            inside_dx=-1,
+            inside_dy=1,
+            long_len=long_len,
+            gap=gap,
+        )
+        # top-left corner (inside directions: +x, -y)
+        self._draw_split_corner_mark(
+            c,
+            x,
+            y + h,
+            inside_dx=1,
+            inside_dy=-1,
+            long_len=long_len,
+            gap=gap,
+        )
+        # top-right corner (inside directions: -x, -y)
+        self._draw_split_corner_mark(
+            c,
+            x + w,
+            y + h,
+            inside_dx=-1,
+            inside_dy=-1,
+            long_len=long_len,
+            gap=gap,
+        )
 
-        c.line(x + w, y, x + w - tick, y)
-        c.line(x + w, y, x + w, y + tick)
+        c.restoreState()
 
-        c.line(x, y + h, x + tick, y + h)
-        c.line(x, y + h, x, y + h - tick)
+    def _draw_split_corner_mark(
+        self,
+        c: canvas.Canvas,
+        cx: float,
+        cy: float,
+        inside_dx: int,
+        inside_dy: int,
+        long_len: float,
+        gap: float,
+    ) -> None:
+        # Horizontal outside long segment
+        c.line(
+            cx - (inside_dx * gap),
+            cy,
+            cx - (inside_dx * (gap + long_len)),
+            cy,
+        )
+        # Vertical outside long segment
+        c.line(
+            cx,
+            cy - (inside_dy * gap),
+            cx,
+            cy - (inside_dy * (gap + long_len)),
+        )
 
-        c.line(x + w, y + h, x + w - tick, y + h)
-        c.line(x + w, y + h, x + w, y + h - tick)
+    def _draw_back_panel_guide(self, c: canvas.Canvas, x: float, y: float, w: float, h: float) -> None:
+        c.saveState()
+        c.setLineWidth(0.35)
+        c.setDash(2, 2)
+        # Dashed outline around the back panel, excluding the fold edge itself.
+        c.line(x, y, x + w, y)
+        c.line(x, y + h, x + w, y + h)
+        c.line(x, y, x, y + h)
+        c.restoreState()
+
+    def _effective_strip_gap(self, gap: float, tick: float) -> float:
+        long_len = tick * 0.75
+        corner_gap = max(0.5 * mm, tick * 0.35)
+        min_gap = 2 * (corner_gap + long_len)
+        return max(gap, min_gap)

@@ -122,6 +122,12 @@ class Application:
         )
         parser.add_argument("--flag-mm", type=float, default=42.0, help="Visible motif area width in mm")
         parser.add_argument("--height-mm", type=float, default=18.0, help="Strip height in mm")
+        parser.add_argument(
+            "--bleed-mm",
+            type=float,
+            default=3.0,
+            help="Length of crop/cut marks in mm",
+        )
         parser.add_argument("--margin-mm", type=float, default=10.0, help="Page margin in mm")
         parser.add_argument("--gap-mm", type=float, default=4.0, help="Gap between strips in mm")
         parser.add_argument("--no-frame", action="store_true", help="Disable dashed helper frame")
@@ -182,6 +188,7 @@ class Application:
             tab_mm=args.tab_mm,
             flag_mm=args.flag_mm,
             height_mm=args.height_mm,
+            bleed_mm=args.bleed_mm,
             margin_mm=args.margin_mm,
             gap_mm=args.gap_mm,
             show_text=False,
@@ -221,6 +228,7 @@ class Application:
             base_tab_mm=args.tab_mm,
             base_flag_mm=args.flag_mm,
             base_height_mm=args.height_mm,
+            bleed_mm=args.bleed_mm,
             margin_mm=args.margin_mm,
             gap_mm=args.gap_mm,
             count_per_canton=args.count,

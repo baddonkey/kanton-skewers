@@ -23,6 +23,7 @@ class VariantSetBuilder:
         base_tab_mm: float,
         base_flag_mm: float,
         base_height_mm: float,
+        bleed_mm: float,
         margin_mm: float,
         gap_mm: float,
         count_per_canton: int,
@@ -52,6 +53,7 @@ class VariantSetBuilder:
                 tab_mm=scaled_tab_mm,
                 flag_mm=scaled_flag_mm,
                 height_mm=base_height_mm * scale,
+                bleed_mm=bleed_mm,
                 margin_mm=margin_mm,
                 gap_mm=gap_mm,
             ):
@@ -69,6 +71,7 @@ class VariantSetBuilder:
                 tab_mm=scaled_tab_mm,
                 flag_mm=base_flag_mm * scale,
                 height_mm=base_height_mm * scale,
+                bleed_mm=bleed_mm,
                 margin_mm=margin_mm,
                 gap_mm=gap_mm,
                 show_text=show_text,
@@ -105,12 +108,13 @@ class VariantSetBuilder:
         tab_mm: float,
         flag_mm: float,
         height_mm: float,
+        bleed_mm: float,
         margin_mm: float,
         gap_mm: float,
     ) -> bool:
         page_w, page_h = landscape(A4)
         margin = margin_mm * mm
-        gap = gap_mm * mm
+        gap = self._effective_strip_gap(gap_mm=gap_mm, bleed_mm=bleed_mm) * mm
         strip_w = (tab_mm + flag_mm) * mm
         strip_h = height_mm * mm
 
@@ -119,3 +123,9 @@ class VariantSetBuilder:
         cols = int((usable_w + gap) // (strip_w + gap))
         rows = int((usable_h + gap) // (strip_h + gap))
         return cols > 0 and rows > 0
+
+    def _effective_strip_gap(self, gap_mm: float, bleed_mm: float) -> float:
+        long_len_mm = bleed_mm * 0.75
+        corner_gap_mm = max(0.5, bleed_mm * 0.35)
+        min_gap_mm = 2 * (corner_gap_mm + long_len_mm)
+        return max(gap_mm, min_gap_mm)

@@ -73,12 +73,15 @@ Fold tab width is automatically matched to the cover panel width.
 
 Text labels (canton code/name) are always disabled in generated strips.
 
+`--bleed-mm` controls the length of the corner crop/cut marks.
+
 Cover layout and fit options:
 
 ```bash
 kanton-skewers generate AG SO ZH SH AI \
   --motif-mode flag \
   --flag-layout square \
+  --bleed-mm 3 \
   --flag-fit cover
 ```
 
@@ -90,6 +93,7 @@ Generate merged variants:
 kanton-skewers generate-variants AG SO ZH SH AI \
   --motif-mode flag \
   --flag-layout square \
+  --bleed-mm 3 \
   --flag-fit cover \
   --scales 1,1.5,2,2.5,3,3.5,4,4.5,5,5.5 \
   --merged-out kanton_skewers_variants_merged.pdf
