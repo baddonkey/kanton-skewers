@@ -101,3 +101,7 @@ kanton-skewers generate-variants AG SO ZH SH AI \
 
 Note: scales that cannot fit on A4 are skipped automatically.
 
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
